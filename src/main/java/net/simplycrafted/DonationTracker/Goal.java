@@ -1,52 +1,66 @@
 package net.simplycrafted.DonationTracker;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Copyright © Brian Ronald
  * 13/07/14
- *
+ * <p>
+ * Goal class - one is instantiated for each donation goal. A donation
+ * goal has a number of days and an amount; if the amount is reached
+ * within the number of days, the effects of the goal are enabled. If
+ * the number falls short, the effects are abandoned.
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
-// Goal class - one is instantiated for each donation goal. A donation
-// goal has a number of days and an amount; if the amount is reached
-// within the number of days, the effects of the goal are enabled. If
-// the number falls short, the effects are abandoned.
 public class Goal {
-    static private DonationTracker donationtracker;
-    int days;
-    int money;
-    String name;
+    @Getter
+    private static DonationTracker donationtracker;
 
-    public String getName() {
-        return name;
-    }
+    @SuppressWarnings("FieldMayBeFinal")
+    @Getter
+    @Setter
+    private int days;
 
+    @SuppressWarnings("FieldMayBeFinal")
+    @Getter
+    @Setter
+    private int money;
+
+    @Getter
+    private final String name;
+
+    /**
+     * Simple container for a command's name and its arguments
+     */
+    @Getter
+    @AllArgsConstructor
     private class Command {
-        // Simple container for a command name and its arguments
-        public String arg0;
-        public String[] args;
+        private String arg0;
+        private String[] args;
     }
 
-    private Set<Command> commandsOnEnabled = new HashSet<>();
-    private Set<Command> commandsOnDisabled = new HashSet<>();
-    private Set<Command> commandsOnDonate = new HashSet<>();
+    private final Collection<Command> commandsOnEnabled = new HashSet<>();
+    private final Collection<Command> commandsOnDisabled = new HashSet<>();
+    private final Collection<Command> commandsOnDonate = new HashSet<>();
 
     // Constructor
-    public Goal(ConfigurationSection goalConfig) {
+    public Goal(final ConfigurationSection goalConfig) {
         // Set the DonationTracker instance variable
         donationtracker = DonationTracker.getInstance();
 
@@ -59,10 +73,11 @@ public class Goal {
 
         donationtracker.getLogger().info("Instantiating goal: " + name);
 
-        // Build lists of Commands to be run when enabled
-        for (String commandString : goalConfig.getStringList("enable")) {
+        /*// Build lists of Commands to be run when enabled
+        for(final String commandString : goalConfig.getStringList("enable")) {
             command = new Command();
-            if (commandString.indexOf(" ") > 0) {
+            if(commandString.indexOf(' ') > 0) {
+
                 command.arg0 = commandString.substring(0, commandString.indexOf(' '));
                 command.args = commandString.substring(commandString.indexOf(' ') + 1).split(" ");
             } else {
@@ -72,21 +87,19 @@ public class Goal {
             commandsOnEnabled.add(command);
         }
         // Build lists of Commands to be run when disabled
-        for (String commandString : goalConfig.getStringList("disable")) {
-            command = new Command();
-            if (commandString.indexOf(" ") > 0) {
-                command.arg0 = commandString.substring(0, commandString.indexOf(' '));
-                command.args = commandString.substring(commandString.indexOf(' ') + 1).split(" ");
+        for(final String commandString : goalConfig.getStringList("disable")) {
+            if(commandString.indexOf(' ') > 0) {
+                command = new Command(commandString.substring(0, commandString.indexOf(' ')),
+                        commandString.substring(commandString.indexOf(' ') + 1).split(" "));
             } else {
-                command.arg0 = commandString;
-                command.args = null;
+                command = new Command(commandString, null);
             }
             commandsOnDisabled.add(command);
         }
         // Build lists of Commands to be run only on donation, not reload, etc
-        for (String commandString : goalConfig.getStringList("atdonate")) {
+        for(final String commandString : goalConfig.getStringList("atdonate")) {
             command = new Command();
-            if (commandString.indexOf(" ") > 0) {
+            if(commandString.indexOf(' ') > 0) {
                 command.arg0 = commandString.substring(0, commandString.indexOf(' '));
                 command.args = commandString.substring(commandString.indexOf(' ') + 1).split(" ");
             } else {
@@ -94,38 +107,55 @@ public class Goal {
                 command.args = null;
             }
             commandsOnDonate.add(command);
+        }*/
+        buildList(goalConfig, commandsOnEnabled, "enable");
+        buildList(goalConfig, commandsOnDisabled, "disable");
+        buildList(goalConfig, commandsOnDonate, "atdonate");
+    }
+
+    private void buildList(final ConfigurationSection goalConfig, final Collection<Command> commandList,
+                           final String yamlLocation) {
+        for(final String commandString : goalConfig.getStringList(yamlLocation)) {
+            final Command command;
+            if(commandString.indexOf(' ') > 0) {
+                command = new Command(commandString.substring(0, commandString.indexOf(' ')),
+                        commandString.substring(commandString.indexOf(' ') + 1).split(" "));
+            } else {
+                command = new Command(commandString, null);
+            }
+            commandList.add(command);
         }
     }
 
     public void enable() {
-        Database database = new Database();
+        final Database database = new Database();
         // Check whether rewards have been enabled
-        if (database.rewardsAreEnabled(this.name)) {
+        if(database.rewardsAreEnabled(name)) {
             return;
         }
         // Enable rewards
         donationtracker.getLogger().info("Enabling rewards: " + name);
-        for (Command command : commandsOnEnabled) {
-            PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
-            if (pluginCommand != null) {
+        for(final Command command : commandsOnEnabled) {
+            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            if(pluginCommand != null) {
                 pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
                 donationtracker.getLogger().info("Invalid command: " + command.arg0);
             }
         }
         // Record that rewards have been enabled
-        database.recordReward(this.name,true);
+        database.recordReward(name, true);
     }
 
     public void ondonate() {
-        Database database = new Database();
-        if (database.rewardsAreEnabled(this.name)) {
+        final Database database = new Database();
+        if(database.rewardsAreEnabled(name)) {
             return;
         }
         // Enable one-off rewards
-        for (Command command : commandsOnDonate) {
-            PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
-            if (pluginCommand != null) {
+        for(final Command command : commandsOnDonate) {
+            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            if(pluginCommand != null) {
                 pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
                 donationtracker.getLogger().info("Invalid command: " + command.arg0);
@@ -134,28 +164,28 @@ public class Goal {
     }
 
     public void abandon() {
-        Database database = new Database();
+        final Database database = new Database();
         // Check whether rewards have been disabled
-        if (!database.rewardsAreEnabled(this.name)) {
+        if(!database.rewardsAreEnabled(name)) {
             return;
         }
         // Disable rewards
         donationtracker.getLogger().info("Disabling rewards: " + name);
-        for (Command command : commandsOnDisabled) {
-            PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
-            if (pluginCommand != null) {
-                pluginCommand.execute(donationtracker.getServer().getConsoleSender(),command.arg0,command.args);
+        for(final Command command : commandsOnDisabled) {
+            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            if(pluginCommand != null) {
+                pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
                 donationtracker.getLogger().info("Invalid command: " + command.arg0);
             }
         }
         // Record that rewards have been disabled
-        database.recordReward(this.name,false);
+        database.recordReward(name, false);
     }
 
     public boolean reached() {
         // Ask Database whether this goal has been reached
-        Database database = new Database();
-        return database.isGoalReached(days,money);
+        final Database database = new Database();
+        return database.isGoalReached(days, money);
     }
 }

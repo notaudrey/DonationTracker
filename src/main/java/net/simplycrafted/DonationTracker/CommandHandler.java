@@ -29,11 +29,11 @@ import java.util.UUID;
  */
 public class CommandHandler implements CommandExecutor {
 
-    String chatPrefix = "" + ChatColor.BOLD + ChatColor.GOLD + "[DC] " + ChatColor.RESET;
-    DonationTracker donationtracker = DonationTracker.getInstance();
+    private final String chatPrefix = "" + ChatColor.BOLD + ChatColor.GOLD + "[DC] " + ChatColor.RESET;
+    private final DonationTracker donationtracker = DonationTracker.getInstance();
 
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Database database = new Database();
+    public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
+        final Database database = new Database();
 
         if (command.getName().equalsIgnoreCase("donation")) {
             if (args.length == 2) {
@@ -42,9 +42,9 @@ public class CommandHandler implements CommandExecutor {
                 try {
                     // See if the argument is a UUID
                     uuid = UUID.fromString(args[0]);
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     // If that threw an error, assume it's a name
-                    for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+                    for (final OfflinePlayer player : Bukkit.getOfflinePlayers()) {
                         // Search all the known players
                         if (player.getName().equalsIgnoreCase(args[0])) {
                             uuid = player.getUniqueId();
@@ -53,7 +53,7 @@ public class CommandHandler implements CommandExecutor {
                 }
                 try {
                     amount = Double.parseDouble(args[1]);
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     amount = 0.0;
                 }
                 if (uuid == null || amount <= 0.0) {
@@ -70,10 +70,10 @@ public class CommandHandler implements CommandExecutor {
                     // Get the donationthanks command from the config and, um, run it...
                     String thankCommand = donationtracker.getConfig().getString("donationthanks");
                     thankCommand = thankCommand.replaceFirst("PLAYER", donationtracker.getServer().getOfflinePlayer(uuid).getName()).replaceFirst("AMOUNT", amount.toString());
-                    String tcarg0 = thankCommand.substring(0, thankCommand.indexOf(' '));
-                    String[] tcargs = thankCommand.substring(thankCommand.indexOf(' ') + 1).split(" ");
+                    final String tcarg0 = thankCommand.substring(0, thankCommand.indexOf(' '));
+                    final String[] tcargs = thankCommand.substring(thankCommand.indexOf(' ') + 1).split(" ");
                     // Have the plugin re-test all goals now
-                    PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(tcarg0);
+                    final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(tcarg0);
                     if (pluginCommand != null) {
                         pluginCommand.execute(donationtracker.getServer().getConsoleSender(), tcarg0, tcargs);
                     } else {
@@ -81,16 +81,18 @@ public class CommandHandler implements CommandExecutor {
                     }
                     donationtracker.assess(true);
                 }
-            } else return false;
+            } else {
+                return false;
+            }
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("donorgoal")) {
-            Configuration config = donationtracker.getConfig();
+            final Configuration config = donationtracker.getConfig();
             if (args.length == 0) {
                 // List the goals
                 sender.sendMessage(chatPrefix + "Donation goals:");
-                for (String goal : config.getConfigurationSection("goals").getKeys(false)) {
+                for (final String goal : config.getConfigurationSection("goals").getKeys(false)) {
                     sender.sendMessage(chatPrefix + String.format("Goal %s: $%.2f in %d days",
                             goal,
                             config.getDouble("goals."+goal+".amount"),
@@ -99,9 +101,9 @@ public class CommandHandler implements CommandExecutor {
                 }
             } else if (args.length == 1) {
                 // Show details of a specific goal
-                String goalName = args[0];
+                final String goalName = args[0];
                 // Get its details from the config
-                ConfigurationSection goalConfig = config.getConfigurationSection("goals." + goalName);
+                final ConfigurationSection goalConfig = config.getConfigurationSection("goals." + goalName);
                 if (goalConfig != null) {
                     // Goal is in the config ; get details from there (ignoring actual loaded goal)
                     sender.sendMessage(chatPrefix + String.format("Goal %s: $%.2f in %d days",
@@ -109,18 +111,18 @@ public class CommandHandler implements CommandExecutor {
                                     goalConfig.getDouble("amount"),
                                     goalConfig.getInt("days"))
                     );
-                    for (String commandToEnable : goalConfig.getStringList("enable")) {
+                    for (final String commandToEnable : goalConfig.getStringList("enable")) {
                         sender.sendMessage(chatPrefix + "Reward: " + ChatColor.WHITE + commandToEnable);
                     }
-                    for (String commandToDisable : goalConfig.getStringList("disable")) {
+                    for (final String commandToDisable : goalConfig.getStringList("disable")) {
                         sender.sendMessage(chatPrefix + "Withdraw: " + ChatColor.WHITE + commandToDisable);
                     }
                 } else {
                     sender.sendMessage(chatPrefix + "Goal " + goalName + " not found. You can create it by setting days or amount");
                 }
-            } else if ((args.length > 1) && (args[1].toLowerCase().matches("^(amount|days|enable|disable|clear)$"))) {
+            } else if (args.length > 1 && args[1].toLowerCase().matches("^(amount|days|enable|disable|clear)$")) {
                 // Given a further argument, matched to a valid command
-                String goalName = args[0];
+                final String goalName = args[0];
                 // This command can implicitly create goals, so if there's no config, create it
                 ConfigurationSection goalConfig = config.getConfigurationSection("goals." + goalName);
                 if (goalConfig == null) {
@@ -130,74 +132,74 @@ public class CommandHandler implements CommandExecutor {
                     if (args[1].equalsIgnoreCase("amount")) {
                         // Given "amount" and a further arg, adjust the amount
                         try {
-                            int amount;
+                            final int amount;
                             amount = Integer.parseInt(args[2]);
                             if (amount <= 0.0) {
                                 sender.sendMessage(chatPrefix + "Amount must be a positive number");
                             } else {
                                 goalConfig.set("amount", amount);
                                 donationtracker.saveConfig();
-                                Goal goal = donationtracker.goals.get(goalName);
+                                Goal goal = donationtracker.getGoals().get(goalName);
                                 if (goal == null) {
                                     // goal object doesn't exist, so create a new one from scratch
                                     sender.sendMessage(chatPrefix + "Creating new goal: " + goalName);
                                     sender.sendMessage(chatPrefix + "Amount: $" + amount);
                                     // use default value for days
-                                    int days = config.getInt("defaultgoaldays");
+                                    final int days = config.getInt("defaultgoaldays");
                                     sender.sendMessage(chatPrefix + "Days: " + days);
                                     goalConfig.set("days", days);
                                     goal = new Goal(goalConfig);
                                     // insert new goal into the global Maps
-                                    donationtracker.goals.put(goalName,goal);
-                                    donationtracker.goalsBackwards.put(goalName,goal);
+                                    donationtracker.getGoals().put(goalName,goal);
+                                    donationtracker.getGoalsBackwards().put(goalName,goal);
                                 } else {
                                     sender.sendMessage(chatPrefix + "Amount: $" + amount);
-                                    goal.money = amount;
+                                    goal.setMoney(amount);
                                 }
                             }
-                        } catch (IllegalArgumentException e) {
+                        } catch (final IllegalArgumentException e) {
                             sender.sendMessage(chatPrefix + "You must specify a valid number");
                         }
                     } else if (args[1].equalsIgnoreCase("days")) {
                         // given "days" and a further arg, adjust the days
                         try {
-                            Integer days = Integer.parseInt(args[2]);
+                            final Integer days = Integer.parseInt(args[2]);
                             if (days < 0) {
                                 sender.sendMessage(chatPrefix + "Days must be a positive number, or 0 for \"forever\"");
                             } else {
                                 goalConfig.set("days", days);
                                 donationtracker.saveConfig();
-                                Goal goal = donationtracker.goals.get(goalName);
+                                Goal goal = donationtracker.getGoals().get(goalName);
                                 if (goal == null) {
                                     // goal object doesn't exist, so create a new one from scratch
                                     sender.sendMessage(chatPrefix + "Creating new goal: " + goalName);
                                     sender.sendMessage(chatPrefix + "Days: " + days);
                                     goal = new Goal(goalConfig);
                                     // insert new goal into the global Maps
-                                    donationtracker.goals.put(goalName,goal);
-                                    donationtracker.goalsBackwards.put(goalName,goal);
+                                    donationtracker.getGoals().put(goalName,goal);
+                                    donationtracker.getGoalsBackwards().put(goalName,goal);
                                 } else {
                                     sender.sendMessage(chatPrefix + "Days: " + days);
-                                    goal.days = days;
+                                    goal.setDays(days);
                                 }
                             }
-                        } catch (IllegalArgumentException e) {
+                        } catch (final IllegalArgumentException e) {
                             sender.sendMessage(chatPrefix + "You must specify a valid number");
                         }
                     } else if (args[1].equalsIgnoreCase("enable")) {
                         // given "enable" and further args, which are a command and its args
                         // Storing that as a string in the config, so StringBuilder to build it from args
-                        StringBuilder stringBuilder = new StringBuilder();
+                        final StringBuilder stringBuilder = new StringBuilder();
                         for (int i = 2; i < args.length; i++) {
                             // looping from 2 because the first two arguments are the goal's name and "enable"
                             stringBuilder.append(args[i]);
                             if (i < args.length) {
-                                stringBuilder.append(" ");
+                                stringBuilder.append(' ');
                             }
                         }
                         // This is how to add to a list in config. Instantiate a list of strings,
                         // add to that instance, and then replace the stored list with that new one.
-                        List<String> enableCommands = goalConfig.getStringList("enable");
+                        final List<String> enableCommands = goalConfig.getStringList("enable");
                         enableCommands.add(stringBuilder.toString());
                         goalConfig.set("enable", enableCommands);
                         donationtracker.saveConfig();
@@ -205,17 +207,17 @@ public class CommandHandler implements CommandExecutor {
                     } else if (args[1].equalsIgnoreCase("disable")) {
                         // given "disable" and further args, which are a command and its args
                         // Storing that as a string in the config, so StringBuilder to build it from args
-                        StringBuilder stringBuilder = new StringBuilder();
+                        final StringBuilder stringBuilder = new StringBuilder();
                         for (int i = 2; i < args.length; i++) {
                             // looping from 2 because the first two arguments are the goal's name and "disable"
                             stringBuilder.append(args[i]);
                             if (i < args.length) {
-                                stringBuilder.append(" ");
+                                stringBuilder.append(' ');
                             }
                         }
                         // This is how to add to a list in config. Instantiate a list of strings,
                         // add to that instance, and then replace the stored list with that new one.
-                        List<String> disableCommands = goalConfig.getStringList("disable");
+                        final List<String> disableCommands = goalConfig.getStringList("disable");
                         disableCommands.add(stringBuilder.toString());
                         goalConfig.set("disable", disableCommands);
                         donationtracker.saveConfig();
@@ -237,10 +239,10 @@ public class CommandHandler implements CommandExecutor {
                     } else if (args[1].equalsIgnoreCase("clear")) {
                         // "donorgoal <goal> clear" will totally eradicate a goal. Takes five steps:
                         // 1. Cancel all rewards granted by this goal.
-                        donationtracker.goals.get(goalName).abandon();
+                        donationtracker.getGoals().get(goalName).abandon();
                         // 2,3. Remove goal from the global Maps.
-                        donationtracker.goals.remove(goalName);
-                        donationtracker.goalsBackwards.remove(goalName);
+                        donationtracker.getGoals().remove(goalName);
+                        donationtracker.getGoalsBackwards().remove(goalName);
                         // 4. Delete its configuration section.
                         donationtracker.getConfig().set("goals." + goalName, null);
                         // 5. Save the config.
@@ -248,7 +250,9 @@ public class CommandHandler implements CommandExecutor {
                         sender.sendMessage(chatPrefix+"Cleared goal from config, and erased it from memory.");
                     }
                 }
-            } else return false;
+            } else {
+                return false;
+            }
             return true;
         }
 
@@ -262,7 +266,7 @@ public class CommandHandler implements CommandExecutor {
                     // Use the number specified
                     days = Integer.parseInt(args[0]);
                     donationtracker.getLogger().info(days.toString());
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     // Number specified was useless; use default instead
                     sender.sendMessage(chatPrefix + "Not a valid number ; using default");
                     days = donationtracker.getConfig().getInt("defaultgoaldays");
@@ -282,8 +286,8 @@ public class CommandHandler implements CommandExecutor {
                 if (args[0].equalsIgnoreCase("advance")) {
                     if (args.length > 1) {
                         try {
-                            database.dbg_advance(Integer.valueOf(args[1]));
-                        } catch (Exception e) {
+                            database.debugAdvance(Integer.valueOf(args[1]));
+                        } catch (final Exception e) {
                             sender.sendMessage("Bad number.");
                         }
                         return true;
