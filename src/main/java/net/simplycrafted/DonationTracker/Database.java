@@ -30,6 +30,36 @@ public class Database {
     private static DonationTracker donationtracker;
     private String prefix = "";
 
+    // Constructor
+    public Database() {
+        // Set the DonationTracker instance variable
+        donationtracker = DonationTracker.getInstance();
+        // Get the table prefix (if there is one)
+        if(donationtracker.getConfig().isSet("mysql.prefix")) {
+            prefix = donationtracker.getConfig().getString("mysql.prefix");
+        } else {
+            prefix = "";
+        }
+        // Automatically call connect() when class is instantiated, and
+        // create tables. We assume that if the database connection is
+        // already present, then the tables are there too.
+        if(db_conn == null) {
+            connect();
+            createTables();
+            initialiseGoals();
+        }
+    }
+
+    // Call this once, when the plugin is being disabled. Called statically from onDisable()
+    public static void disconnect() {
+        try {
+            donationtracker.getLogger().info("Closing MySQL database connection");
+            db_conn.close();
+        } catch(final Exception e) {
+            donationtracker.getLogger().info("Tried to close the connection, but failed (possibly because it's already closed)");
+        }
+    }
+
     // We call this from the constructor, and whenever we find that the database has gone away
     public void connect() {
         donationtracker.getLogger().info("Opening MySQL database connection");
@@ -54,16 +84,6 @@ public class Database {
             return true;
         }
         return false;
-    }
-
-    // Call this once, when the plugin is being disabled. Called statically from onDisable()
-    public static void disconnect() {
-        try {
-            donationtracker.getLogger().info("Closing MySQL database connection");
-            db_conn.close();
-        } catch(final Exception e) {
-            donationtracker.getLogger().info("Tried to close the connection, but failed (possibly because it's already closed)");
-        }
     }
 
     // Create any tables we need (if they don't exist)
@@ -111,26 +131,6 @@ public class Database {
             } catch(final SQLException e) {
                 donationtracker.getLogger().info(e.toString());
             }
-        }
-    }
-
-    // Constructor
-    public Database() {
-        // Set the DonationTracker instance variable
-        donationtracker = DonationTracker.getInstance();
-        // Get the table prefix (if there is one)
-        if(donationtracker.getConfig().isSet("mysql.prefix")) {
-            prefix = donationtracker.getConfig().getString("mysql.prefix");
-        } else {
-            prefix = "";
-        }
-        // Automatically call connect() when class is instantiated, and
-        // create tables. We assume that if the database connection is
-        // already present, then the tables are there too.
-        if(db_conn == null) {
-            connect();
-            createTables();
-            initialiseGoals();
         }
     }
 

@@ -26,16 +26,21 @@ import java.util.TreeMap;
  * GNU General Public License for more details.
  */
 public class DonationTracker extends JavaPlugin {
-    
+
     // Our only instance
     private static DonationTracker donationtracker;
-    
+
     // List of instantiated goals
     @Getter
     private Map<String, Goal> goals;
     @Getter
     private Map<String, Goal> goalsBackwards;
-    
+
+    // Lets other classes get a reference to our instance
+    public static DonationTracker getInstance() {
+        return donationtracker;
+    }
+
     // Determine which goals need to be rewarded or otherwise
     public void assess(final boolean atDonationTime) {
         for(final Entry<String, Goal> stringGoalEntry : goals.entrySet()) {
@@ -54,7 +59,7 @@ public class DonationTracker extends JavaPlugin {
             }
         }
     }
-    
+
     // Withdraw all rewards (used when closing down the plugin).
     public void withdraw() {
         for(final Entry<String, Goal> stringGoalEntry : goalsBackwards.entrySet()) {
@@ -65,7 +70,7 @@ public class DonationTracker extends JavaPlugin {
             }
         }
     }
-    
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -82,7 +87,7 @@ public class DonationTracker extends JavaPlugin {
         getCommand("donorgoal").setExecutor(commandHandler);
         getCommand("donationpool").setExecutor(commandHandler);
         getCommand("dgadmin").setExecutor(commandHandler);
-        
+
         // Load the goals from the config file
         ConfigurationSection goalConfig;
         final ConfigurationSection goalsConfig = getConfig().getConfigurationSection("goals");
@@ -95,23 +100,18 @@ public class DonationTracker extends JavaPlugin {
             goals.put(key, goal);
             goalsBackwards.put(key, goal);
         }
-        
+
         // Schedule a checker to examine these goals periodically
         final BukkitScheduler scheduler = getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> assess(false), 100, getConfig().getInt("period"));
     }
-    
+
     @Override
     public void onDisable() {
         withdraw();
         Database.disconnect();
     }
-    
-    // Lets other classes get a reference to our instance
-    public static DonationTracker getInstance() {
-        return donationtracker;
-    }
-    
+
     public void reload() {
         // Withdraw all goal rewards
         withdraw();

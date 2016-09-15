@@ -31,34 +31,19 @@ import java.util.HashSet;
 public class Goal {
     @Getter
     private static DonationTracker donationtracker;
-
+    @Getter
+    private final String name;
+    private final Collection<Command> commandsOnEnabled = new HashSet<>();
+    private final Collection<Command> commandsOnDisabled = new HashSet<>();
+    private final Collection<Command> commandsOnDonate = new HashSet<>();
     @SuppressWarnings("FieldMayBeFinal")
     @Getter
     @Setter
     private int days;
-
     @SuppressWarnings("FieldMayBeFinal")
     @Getter
     @Setter
     private int money;
-
-    @Getter
-    private final String name;
-
-    /**
-     * Simple container for a command's name and its arguments
-     */
-    @Getter
-    @AllArgsConstructor
-    private class Command {
-        private String arg0;
-        private String[] args;
-    }
-
-    private final Collection<Command> commandsOnEnabled = new HashSet<>();
-    private final Collection<Command> commandsOnDisabled = new HashSet<>();
-    private final Collection<Command> commandsOnDonate = new HashSet<>();
-
     // Constructor
     public Goal(final ConfigurationSection goalConfig) {
         // Set the DonationTracker instance variable
@@ -187,5 +172,15 @@ public class Goal {
         // Ask Database whether this goal has been reached
         final Database database = new Database();
         return database.isGoalReached(days, money);
+    }
+
+    /**
+     * Simple container for a command's name and its arguments
+     */
+    @Getter
+    @AllArgsConstructor
+    private class Command {
+        private String arg0;
+        private String[] args;
     }
 }
