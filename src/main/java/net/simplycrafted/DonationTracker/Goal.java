@@ -50,7 +50,7 @@ public class Goal {
         donationtracker = DonationTracker.getInstance();
 
         // Re-usable Command variable
-        Command command;
+        //Command command;
 
         days = goalConfig.getInt("days");
         money = goalConfig.getInt("amount");
@@ -58,6 +58,7 @@ public class Goal {
 
         donationtracker.getLogger().info("Instantiating goal: " + name);
 
+        // TODO: Test this properly
         /*// Build lists of Commands to be run when enabled
         for(final String commandString : goalConfig.getStringList("enable")) {
             command = new Command();
@@ -113,6 +114,7 @@ public class Goal {
     }
 
     public void enable() {
+        // TODO: Connections...
         final Database database = new Database();
         // Check whether rewards have been enabled
         if(database.rewardsAreEnabled(name)) {
@@ -133,6 +135,7 @@ public class Goal {
     }
 
     public void ondonate() {
+        // TODO: Connections...
         final Database database = new Database();
         if(database.rewardsAreEnabled(name)) {
             return;
@@ -149,6 +152,7 @@ public class Goal {
     }
 
     public void abandon() {
+        // TODO: Connections...
         final Database database = new Database();
         // Check whether rewards have been disabled
         if(!database.rewardsAreEnabled(name)) {
@@ -170,6 +174,7 @@ public class Goal {
 
     public boolean reached() {
         // Ask Database whether this goal has been reached
+        // TODO: Connections...
         final Database database = new Database();
         return database.isGoalReached(days, money);
     }

@@ -12,6 +12,12 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 /**
+ * GENERAL TO-DO LIST:
+ * -------------------
+ * * Proper encapsulation
+ * * Remove all those extra DB connections
+ * * Test to make sure that changes all work
+ *
  * Copyright © Brian Ronald
  * 28/06/14
  * <p>
@@ -78,6 +84,7 @@ public class DonationTracker extends JavaPlugin {
         goals = new TreeMap<>();
         goalsBackwards = new TreeMap<>(Collections.reverseOrder());
         // Bail out now if we have no database
+        // TODO: Potentially extraneous DB connection
         final Database dbtest = new Database();
         if(dbtest.connectionIsDead()) {
             return;

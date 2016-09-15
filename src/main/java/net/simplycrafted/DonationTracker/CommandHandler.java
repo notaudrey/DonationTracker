@@ -33,6 +33,7 @@ public class CommandHandler implements CommandExecutor {
     private final DonationTracker donationtracker = DonationTracker.getInstance();
 
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
+        // TODO: Extraneous DB connection
         final Database database = new Database();
 
         if(command.getName().equalsIgnoreCase("donation")) {
