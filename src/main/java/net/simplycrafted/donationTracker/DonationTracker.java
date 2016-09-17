@@ -1,7 +1,10 @@
 package net.simplycrafted.donationTracker;
 
 import lombok.Getter;
-import org.bukkit.command.CommandExecutor;
+import net.simplycrafted.donationTracker.cmd.CommandDGAdmin;
+import net.simplycrafted.donationTracker.cmd.CommandDonation;
+import net.simplycrafted.donationTracker.cmd.CommandDonationPool;
+import net.simplycrafted.donationTracker.cmd.CommandDonorGoal;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -17,7 +20,7 @@ import java.util.TreeMap;
  * * Proper encapsulation
  * * Remove all those extra DB connections
  * * Test to make sure that changes all work
- *
+ * <p>
  * Copyright © Brian Ronald
  * 28/06/14
  * <p>
@@ -79,11 +82,10 @@ public class DonationTracker extends JavaPlugin {
         if(dbtest.connectionIsDead()) {
             return;
         }
-        final CommandExecutor commandHandler = new CommandHandler(this);
-        getCommand("donation").setExecutor(commandHandler);
-        getCommand("donorgoal").setExecutor(commandHandler);
-        getCommand("donationpool").setExecutor(commandHandler);
-        getCommand("dgadmin").setExecutor(commandHandler);
+        getCommand("donation").setExecutor(new CommandDonation(this));
+        getCommand("donorgoal").setExecutor(new CommandDonorGoal(this));
+        getCommand("donationpool").setExecutor(new CommandDonationPool(this));
+        getCommand("dgadmin").setExecutor(new CommandDGAdmin(this));
 
         // Load the goals from the config file
         ConfigurationSection goalConfig;
