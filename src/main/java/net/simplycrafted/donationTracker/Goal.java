@@ -1,4 +1,4 @@
-package net.simplycrafted.DonationTracker;
+package net.simplycrafted.donationTracker;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,8 +29,7 @@ import java.util.HashSet;
  * GNU General Public License for more details.
  */
 public class Goal {
-    @Getter
-    private static DonationTracker donationtracker;
+    private static DonationTracker plugin;
     @Getter
     private final String name;
     private final Collection<Command> commandsOnEnabled = new HashSet<>();
@@ -45,9 +44,9 @@ public class Goal {
     @Setter
     private int money;
     // Constructor
-    public Goal(final ConfigurationSection goalConfig) {
-        // Set the DonationTracker instance variable
-        donationtracker = DonationTracker.getInstance();
+    public Goal(final DonationTracker plugin, final ConfigurationSection goalConfig) {
+        // Set the donationTracker instance variable
+        Goal.plugin = plugin;
 
         // Re-usable Command variable
         //Command command;
@@ -56,7 +55,7 @@ public class Goal {
         money = goalConfig.getInt("amount");
         name = goalConfig.getName();
 
-        donationtracker.getLogger().info("Instantiating goal: " + name);
+        Goal.plugin.getLogger().info("Instantiating goal: " + name);
 
         // TODO: Test this properly
         /*// Build lists of Commands to be run when enabled
@@ -115,19 +114,19 @@ public class Goal {
 
     public void enable() {
         // TODO: Connections...
-        final Database database = new Database();
+        final Database database = new Database(plugin);
         // Check whether rewards have been enabled
         if(database.rewardsAreEnabled(name)) {
             return;
         }
         // Enable rewards
-        donationtracker.getLogger().info("Enabling rewards: " + name);
+        plugin.getLogger().info("Enabling rewards: " + name);
         for(final Command command : commandsOnEnabled) {
-            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            final PluginCommand pluginCommand = plugin.getServer().getPluginCommand(command.arg0);
             if(pluginCommand != null) {
-                pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
+                pluginCommand.execute(plugin.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
-                donationtracker.getLogger().info("Invalid command: " + command.arg0);
+                plugin.getLogger().info("Invalid command: " + command.arg0);
             }
         }
         // Record that rewards have been enabled
@@ -136,36 +135,36 @@ public class Goal {
 
     public void ondonate() {
         // TODO: Connections...
-        final Database database = new Database();
+        final Database database = new Database(plugin);
         if(database.rewardsAreEnabled(name)) {
             return;
         }
         // Enable one-off rewards
         for(final Command command : commandsOnDonate) {
-            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            final PluginCommand pluginCommand = plugin.getServer().getPluginCommand(command.arg0);
             if(pluginCommand != null) {
-                pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
+                pluginCommand.execute(plugin.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
-                donationtracker.getLogger().info("Invalid command: " + command.arg0);
+                plugin.getLogger().info("Invalid command: " + command.arg0);
             }
         }
     }
 
     public void abandon() {
         // TODO: Connections...
-        final Database database = new Database();
+        final Database database = new Database(plugin);
         // Check whether rewards have been disabled
         if(!database.rewardsAreEnabled(name)) {
             return;
         }
         // Disable rewards
-        donationtracker.getLogger().info("Disabling rewards: " + name);
+        plugin.getLogger().info("Disabling rewards: " + name);
         for(final Command command : commandsOnDisabled) {
-            final PluginCommand pluginCommand = donationtracker.getServer().getPluginCommand(command.arg0);
+            final PluginCommand pluginCommand = plugin.getServer().getPluginCommand(command.arg0);
             if(pluginCommand != null) {
-                pluginCommand.execute(donationtracker.getServer().getConsoleSender(), command.arg0, command.args);
+                pluginCommand.execute(plugin.getServer().getConsoleSender(), command.arg0, command.args);
             } else {
-                donationtracker.getLogger().info("Invalid command: " + command.arg0);
+                plugin.getLogger().info("Invalid command: " + command.arg0);
             }
         }
         // Record that rewards have been disabled
@@ -175,7 +174,7 @@ public class Goal {
     public boolean reached() {
         // Ask Database whether this goal has been reached
         // TODO: Connections...
-        final Database database = new Database();
+        final Database database = new Database(plugin);
         return database.isGoalReached(days, money);
     }
 

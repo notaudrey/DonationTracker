@@ -1,4 +1,4 @@
-package net.simplycrafted.DonationTracker;
+package net.simplycrafted.donationTracker;
 
 import lombok.Getter;
 import org.bukkit.command.CommandExecutor;
@@ -32,20 +32,11 @@ import java.util.TreeMap;
  * GNU General Public License for more details.
  */
 public class DonationTracker extends JavaPlugin {
-
-    // Our only instance
-    private static DonationTracker donationtracker;
-
     // List of instantiated goals
     @Getter
     private Map<String, Goal> goals;
     @Getter
     private Map<String, Goal> goalsBackwards;
-
-    // Lets other classes get a reference to our instance
-    public static DonationTracker getInstance() {
-        return donationtracker;
-    }
 
     // Determine which goals need to be rewarded or otherwise
     public void assess(final boolean atDonationTime) {
@@ -80,16 +71,15 @@ public class DonationTracker extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        donationtracker = this;
         goals = new TreeMap<>();
         goalsBackwards = new TreeMap<>(Collections.reverseOrder());
         // Bail out now if we have no database
         // TODO: Potentially extraneous DB connection
-        final Database dbtest = new Database();
+        final Database dbtest = new Database(this);
         if(dbtest.connectionIsDead()) {
             return;
         }
-        final CommandExecutor commandHandler = new CommandHandler();
+        final CommandExecutor commandHandler = new CommandHandler(this);
         getCommand("donation").setExecutor(commandHandler);
         getCommand("donorgoal").setExecutor(commandHandler);
         getCommand("donationpool").setExecutor(commandHandler);
@@ -100,7 +90,7 @@ public class DonationTracker extends JavaPlugin {
         final ConfigurationSection goalsConfig = getConfig().getConfigurationSection("goals");
         for(final String key : goalsConfig.getKeys(false)) {
             goalConfig = goalsConfig.getConfigurationSection(key);
-            final Goal goal = new Goal(goalConfig);
+            final Goal goal = new Goal(this, goalConfig);
             if(goal.reached()) {
                 getLogger().info("...reached");
             }
@@ -132,7 +122,7 @@ public class DonationTracker extends JavaPlugin {
         final ConfigurationSection goalsConfig = getConfig().getConfigurationSection("goals");
         for(final String key : goalsConfig.getKeys(false)) {
             goalConfig = goalsConfig.getConfigurationSection(key);
-            final Goal goal = new Goal(goalConfig);
+            final Goal goal = new Goal(this, goalConfig);
             if(goal.reached()) {
                 getLogger().info("...reached");
             }

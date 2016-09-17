@@ -1,5 +1,5 @@
-name: DonationTracker
-main: net.simplycrafted.DonationTracker.DonationTracker
+name: donationTracker
+main: net.simplycrafted.donationTracker.donationTracker
 author: Brianetta
 version: 0.1
 commands:
@@ -31,7 +31,7 @@ commands:
         usage: Ask Brian
 permissions:
     donationtracker.*:
-        description: All DonationTracker permissions
+        description: All donationTracker permissions
         children:
             donationtracker.record: true
             donationtracker.goals: true

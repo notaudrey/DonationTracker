@@ -1,4 +1,4 @@
-package net.simplycrafted.DonationTracker;
+package net.simplycrafted.donationTracker;
 
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -31,9 +31,9 @@ public class Database {
     private String prefix = "";
 
     // Constructor
-    public Database() {
-        // Set the DonationTracker instance variable
-        donationtracker = DonationTracker.getInstance();
+    public Database(final DonationTracker plugin) {
+        // Set the donationTracker instance variable
+        donationtracker = plugin;
         // Get the table prefix (if there is one)
         if(donationtracker.getConfig().isSet("mysql.prefix")) {
             prefix = donationtracker.getConfig().getString("mysql.prefix");
@@ -71,7 +71,7 @@ public class Database {
         try {
             db_conn = DriverManager.getConnection(String.format("jdbc:mysql://%s:%s/%s?user=%s&password=%s", hostname, String.valueOf(port), database, user, password));
         } catch(final Exception e) {
-            donationtracker.getLogger().info("DonationTracker requires a MySQL database. Couldn't get connected.");
+            donationtracker.getLogger().info("donationTracker requires a MySQL database. Couldn't get connected.");
             donationtracker.getLogger().info(e.toString());
         }
     }
