@@ -1,5 +1,5 @@
 name: donationTracker
-main: net.simplycrafted.donationTracker.donationTracker
+main: net.simplycrafted.donationTracker.DonationTracker
 author: Brianetta
 version: 0.1
 commands:
